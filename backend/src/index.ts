@@ -9,6 +9,7 @@ import { errorHandler } from './utils/errorHandler';
 import projectRoutes from './routes/projectRoutes';
 import documentRoutes from './routes/documentRoutes';
 import consistencyRoutes from './routes/consistencyRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/projects', projectRoutes);
+app.use('/projects', uploadRoutes);
 app.use('/documents', documentRoutes);
 app.use('/projects', consistencyRoutes);
 

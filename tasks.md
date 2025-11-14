@@ -46,10 +46,10 @@
 - [x] Implement database models/repositories
 
 ### 2.3 Document Processing
-- [ ] Implement .docx parser using Mammoth.js
-- [ ] Implement paragraph extraction logic
-- [ ] Create paragraph_id generator (p-0, p-1, ...)
-- [ ] Implement HTML/text conversion
+- [x] Implement .docx parser using Mammoth.js
+- [x] Implement paragraph extraction logic
+- [x] Create paragraph_id generator (p-0, p-1, ...)
+- [x] Implement HTML/text conversion
 
 ### 2.4 API Endpoints - Projects
 - [x] `GET /projects` - List all projects
@@ -57,13 +57,13 @@
 
 ### 2.5 API Endpoints - Documents
 - [x] `GET /projects/:projectId/documents` - List documents in project
-- [ ] `POST /projects/:projectId/documents` - Upload .docx (multipart/form-data)
-  - [ ] File validation (.docx only)
-  - [ ] Store document record (status: "uploaded")
-  - [ ] Parse .docx and extract paragraphs
-  - [ ] Store paragraphs in database
-  - [ ] Update document status to "ready"
-  - [ ] Call RAG-engine for embedding ingestion
+- [x] `POST /projects/:projectId/documents` - Upload .docx (multipart/form-data)
+  - [x] File validation (.docx only)
+  - [x] Store document record (status: "uploaded")
+  - [x] Parse .docx and extract paragraphs
+  - [x] Store paragraphs in database
+  - [x] Update document status to "ready"
+  - [x] Call RAG-engine for embedding ingestion
 - [x] `GET /documents/:documentId/content` - Get document paragraphs
 
 ### 2.6 API Endpoints - Consistency Analysis
