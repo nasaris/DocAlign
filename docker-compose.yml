@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: docalign-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docalign
+      POSTGRES_PASSWORD: docalign_password
+      POSTGRES_DB: docalign
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docalign"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: docalign-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend - Node.js + TypeScript REST API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docalign-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://docalign:docalign_password@db:5432/docalign
+      RAG_ENGINE_URL: http://rag-engine:8000
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+      rag-engine:
+        condition: service_started
+    command: npm run start
+
+  # RAG-Engine - Python + FastAPI
+  rag-engine:
+    build:
+      context: ./rag-engine
+      dockerfile: Dockerfile
+    container_name: docalign-rag-engine
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: postgresql://docalign:docalign_password@db:5432/docalign
+      QDRANT_URL: http://qdrant:6333
+      EMBEDDING_MODEL: text-embedding-3-small
+      LLM_MODEL: gpt-4
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./rag-engine:/app
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+
+  # Frontend - React + TypeScript + Material UI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000
+    container_name: docalign-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+volumes:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

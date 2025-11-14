@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  documents       Document[]
+  inconsistencies DocumentInconsistency[]
+
+  @@map("projects")
+}
+
+enum DocumentStatus {
+  UPLOADED
+  READY
+  ERROR
+
+  @@map("document_status")
+}
+
+model Document {
+  id               String         @id @default(uuid())
+  projectId        String         @map("project_id")
+  title            String
+  originalFilename String         @map("original_filename")
+  status           DocumentStatus @default(UPLOADED)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  project    Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  paragraphs DocumentParagraph[]
+
+  sourceInconsistencies DocumentInconsistency[] @relation("SourceDocument")
+  targetInconsistencies DocumentInconsistency[] @relation("TargetDocument")
+
+  @@map("documents")
+}
+
+model DocumentParagraph {
+  id          String  @id @default(uuid())
+  documentId  String  @map("document_id")
+  index       Int
+  paragraphId String  @map("paragraph_id")
+  text        String  @db.Text
+  html        String? @db.Text
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, index])
+  @@map("document_paragraphs")
+}
+
+enum InconsistencyType {
+  CONTRADICTION
+  MISSING_REQUIREMENT
+  CONFLICTING_DEFINITION
+  INCONSISTENT_SCOPE
+  DATA_MISMATCH
+
+  @@map("inconsistency_type")
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+
+  @@map("severity")
+}
+
+model DocumentInconsistency {
+  id                   String            @id @default(uuid())
+  projectId            String            @map("project_id")
+  sourceDocumentId     String            @map("source_document_id")
+  targetDocumentId     String            @map("target_document_id")
+  inconsistencyType    InconsistencyType @map("inconsistency_type")
+  severity             Severity
+  description          String            @db.Text
+  explanation          String            @db.Text
+  recommendation       String            @db.Text
+  sourceExcerpt        String            @map("source_excerpt") @db.Text
+  targetExcerpt        String            @map("target_excerpt") @db.Text
+  sourceParagraphIndex Int               @map("source_paragraph_index")
+  sourceStartOffset    Int               @map("source_start_offset")
+  sourceEndOffset      Int               @map("source_end_offset")
+  targetParagraphIndex Int               @map("target_paragraph_index")
+  targetStartOffset    Int               @map("target_start_offset")
+  targetEndOffset      Int               @map("target_end_offset")
+  createdAt            DateTime          @default(now()) @map("created_at")
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceDocument Document @relation("SourceDocument", fields: [sourceDocumentId], references: [id], onDelete: Cascade)
+  targetDocument Document @relation("TargetDocument", fields: [targetDocumentId], references: [id], onDelete: Cascade)
+
+  @@map("document_inconsistencies")
+}
