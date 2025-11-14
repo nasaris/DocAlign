@@ -7,43 +7,43 @@
 
 ### 1.1 Repository & Project Structure
 - [x] Create tasks.md file
-- [ ] Initialize Git repository
-- [ ] Create GitHub repository
-- [ ] Create monorepo folder structure
-  - [ ] `/backend` - Node.js + TypeScript REST API
-  - [ ] `/rag-engine` - Python + FastAPI
-  - [ ] `/frontend` - React + TypeScript + Material UI
+- [x] Initialize Git repository
+- [x] Create GitHub repository (https://github.com/nasaris/DocAlign)
+- [x] Create monorepo folder structure
+  - [x] `/backend` - Node.js + TypeScript REST API
+  - [x] `/rag-engine` - Python + FastAPI
+  - [x] `/frontend` - React + TypeScript + Material UI
 
 ### 1.2 Docker Infrastructure
-- [ ] Create `docker-compose.yml` with all services:
-  - [ ] PostgreSQL service with volume
-  - [ ] Qdrant service with volume
-  - [ ] Backend service
-  - [ ] RAG-engine service
-  - [ ] Frontend service
-- [ ] Configure shared Docker network (`app-network`)
-- [ ] Setup environment variable templates
+- [x] Create `docker-compose.yml` with all services:
+  - [x] PostgreSQL service with volume
+  - [x] Qdrant service with volume
+  - [x] Backend service
+  - [x] RAG-engine service
+  - [x] Frontend service
+- [x] Configure shared Docker network (`app-network`)
+- [x] Setup environment variable templates
 
 ---
 
 ## Phase 2: Backend (Node.js + TypeScript)
 
 ### 2.1 Foundation
-- [ ] Initialize Node.js + TypeScript project
-- [ ] Setup Express/Fastify
-- [ ] Configure logging (Winston/Pino)
-- [ ] Setup request validation middleware
-- [ ] Configure error handling
+- [x] Initialize Node.js + TypeScript project
+- [x] Setup Express/Fastify
+- [x] Configure logging (Winston/Pino)
+- [x] Setup request validation middleware
+- [x] Configure error handling
 
 ### 2.2 Database Layer
-- [ ] Setup Prisma/TypeORM
-- [ ] Create database schema:
-  - [ ] `projects` table (id, name, created_at, updated_at)
-  - [ ] `documents` table (id, project_id, title, original_filename, status, created_at, updated_at)
-  - [ ] `document_paragraphs` table (id, document_id, index, paragraph_id, text, html)
-  - [ ] `document_inconsistencies` table (id, project_id, source_document_id, target_document_id, inconsistency_type, severity, description, explanation, recommendation, source_excerpt, target_excerpt, source_paragraph_index, source_start_offset, source_end_offset, target_paragraph_index, target_start_offset, target_end_offset, created_at)
-- [ ] Create database migrations
-- [ ] Implement database models/repositories
+- [x] Setup Prisma/TypeORM
+- [x] Create database schema:
+  - [x] `projects` table (id, name, created_at, updated_at)
+  - [x] `documents` table (id, project_id, title, original_filename, status, created_at, updated_at)
+  - [x] `document_paragraphs` table (id, document_id, index, paragraph_id, text, html)
+  - [x] `document_inconsistencies` table (id, project_id, source_document_id, target_document_id, inconsistency_type, severity, description, explanation, recommendation, source_excerpt, target_excerpt, source_paragraph_index, source_start_offset, source_end_offset, target_paragraph_index, target_start_offset, target_end_offset, created_at)
+- [x] Create database migrations
+- [x] Implement database models/repositories
 
 ### 2.3 Document Processing
 - [ ] Implement .docx parser using Mammoth.js
@@ -52,11 +52,11 @@
 - [ ] Implement HTML/text conversion
 
 ### 2.4 API Endpoints - Projects
-- [ ] `GET /projects` - List all projects
-- [ ] `POST /projects` - Create new project
+- [x] `GET /projects` - List all projects
+- [x] `POST /projects` - Create new project
 
 ### 2.5 API Endpoints - Documents
-- [ ] `GET /projects/:projectId/documents` - List documents in project
+- [x] `GET /projects/:projectId/documents` - List documents in project
 - [ ] `POST /projects/:projectId/documents` - Upload .docx (multipart/form-data)
   - [ ] File validation (.docx only)
   - [ ] Store document record (status: "uploaded")
@@ -64,26 +64,26 @@
   - [ ] Store paragraphs in database
   - [ ] Update document status to "ready"
   - [ ] Call RAG-engine for embedding ingestion
-- [ ] `GET /documents/:documentId/content` - Get document paragraphs
+- [x] `GET /documents/:documentId/content` - Get document paragraphs
 
 ### 2.6 API Endpoints - Consistency Analysis
-- [ ] `POST /projects/:projectId/consistency/run` - Trigger consistency check
-  - [ ] Fetch all ready documents
-  - [ ] Generate document pairs
-  - [ ] Call RAG-engine for each pair
-  - [ ] Store inconsistencies in database
-- [ ] `GET /projects/:projectId/inconsistencies` - Get inconsistencies
-  - [ ] Support optional `documentId` filter
+- [x] `POST /projects/:projectId/consistency/run` - Trigger consistency check
+  - [x] Fetch all ready documents
+  - [x] Generate document pairs
+  - [x] Call RAG-engine for each pair
+  - [x] Store inconsistencies in database
+- [x] `GET /projects/:projectId/inconsistencies` - Get inconsistencies
+  - [x] Support optional `documentId` filter
 
 ### 2.7 RAG-Engine Integration
-- [ ] Implement HTTP client for RAG-engine
-- [ ] Create `/embeddings/ingest-document` caller
-- [ ] Create `/consistency/analyze-pair` caller
+- [x] Implement HTTP client for RAG-engine
+- [x] Create `/embeddings/ingest-document` caller
+- [x] Create `/consistency/analyze-pair` caller
 
 ### 2.8 Backend Dockerfile
-- [ ] Create `backend/Dockerfile`
-- [ ] Configure Node.js container
-- [ ] Setup production build
+- [x] Create `backend/Dockerfile`
+- [x] Configure Node.js container
+- [x] Setup production build
 
 ---
 
@@ -250,14 +250,14 @@
 ## Phase 5: Integration & Testing
 
 ### 5.1 Environment Configuration
-- [ ] Create `.env.example` for backend
+- [x] Create `.env.example` for backend
 - [ ] Create `.env.example` for rag-engine
 - [ ] Create `.env.example` for frontend
-- [ ] Document required environment variables:
-  - [ ] OpenAI API key
-  - [ ] PostgreSQL credentials
-  - [ ] Qdrant URL
-  - [ ] Backend/RAG-engine URLs
+- [x] Document required environment variables:
+  - [x] OpenAI API key
+  - [x] PostgreSQL credentials
+  - [x] Qdrant URL
+  - [x] Backend/RAG-engine URLs
 
 ### 5.2 Docker Compose Testing
 - [ ] Test `docker-compose up` from scratch
@@ -291,19 +291,19 @@
 ## Phase 6: Documentation & Deployment
 
 ### 6.1 Documentation
-- [ ] Create comprehensive README.md:
-  - [ ] Project overview
-  - [ ] Architecture diagram
-  - [ ] Technology stack
-  - [ ] Setup instructions
-  - [ ] Environment variables reference
-  - [ ] API documentation
+- [x] Create comprehensive README.md:
+  - [x] Project overview
+  - [x] Architecture diagram
+  - [x] Technology stack
+  - [x] Setup instructions
+  - [x] Environment variables reference
+  - [x] API documentation
   - [ ] Troubleshooting guide
 - [ ] Add code comments and docstrings
 - [ ] Create API documentation (Swagger/OpenAPI)
 
 ### 6.2 Code Quality
-- [ ] Add TypeScript strict mode
+- [x] Add TypeScript strict mode
 - [ ] Add ESLint/Prettier for frontend & backend
 - [ ] Add Pylint/Black for rag-engine
 - [ ] Add pre-commit hooks
