@@ -90,61 +90,61 @@
 ## Phase 3: RAG-Engine (Python + FastAPI)
 
 ### 3.1 Foundation
-- [ ] Initialize Python project with poetry/pip
-- [ ] Setup FastAPI application
-- [ ] Configure logging
-- [ ] Setup error handling
-- [ ] Create Pydantic models for request/response validation
+- [x] Initialize Python project with poetry/pip
+- [x] Setup FastAPI application
+- [x] Configure logging
+- [x] Setup error handling
+- [x] Create Pydantic models for request/response validation
 
 ### 3.2 Database Client
-- [ ] Implement PostgreSQL client (psycopg2/asyncpg)
-- [ ] Create connection pool
-- [ ] Implement paragraph fetching queries
+- [x] Implement PostgreSQL client (psycopg2/asyncpg)
+- [x] Create connection pool
+- [x] Implement paragraph fetching queries
 
 ### 3.3 Qdrant Integration
-- [ ] Install qdrant-client
-- [ ] Implement Qdrant client wrapper
-- [ ] Create `paragraph_embeddings` collection
-  - [ ] Configure vector size (1536 for text-embedding-3-small)
-  - [ ] Configure distance metric (COSINE)
-- [ ] Implement `upsert_paragraph_embedding()` function
-- [ ] Implement `query_similar_paragraphs()` function
+- [x] Install qdrant-client
+- [x] Implement Qdrant client wrapper
+- [x] Create `paragraph_embeddings` collection
+  - [x] Configure vector size (1536 for text-embedding-3-small)
+  - [x] Configure distance metric (COSINE)
+- [x] Implement `upsert_paragraph_embedding()` function
+- [x] Implement `query_similar_paragraphs()` function
 
 ### 3.4 Embedding Service
-- [ ] Install OpenAI Python client
-- [ ] Implement abstracted `generate_embedding(text: str) -> list[float]`
-  - [ ] Use OpenAI text-embedding-3-small
-  - [ ] Abstract to allow future model swapping
-- [ ] Add batch embedding support (optional optimization)
+- [x] Install OpenAI Python client
+- [x] Implement abstracted `generate_embedding(text: str) -> list[float]`
+  - [x] Use OpenAI text-embedding-3-small
+  - [x] Abstract to allow future model swapping
+- [x] Add batch embedding support (optional optimization)
 
 ### 3.5 LLM Service
-- [ ] Implement LLM client using OpenAI API
-- [ ] Design consistency check prompt with:
-  - [ ] Inconsistency types (CONTRADICTION, MISSING_REQUIREMENT, CONFLICTING_DEFINITION, INCONSISTENT_SCOPE, DATA_MISMATCH)
-  - [ ] Severity levels (CRITICAL, HIGH, MEDIUM, LOW)
-  - [ ] JSON response schema
-- [ ] Implement `analyze_paragraph_pair()` function
-  - [ ] Call LLM with structured prompt
-  - [ ] Parse JSON response
-  - [ ] Extract: is_inconsistent, type, severity, description, explanation, recommendation, excerpts, locations
+- [x] Implement LLM client using OpenAI API
+- [x] Design consistency check prompt with:
+  - [x] Inconsistency types (CONTRADICTION, MISSING_REQUIREMENT, CONFLICTING_DEFINITION, INCONSISTENT_SCOPE, DATA_MISMATCH)
+  - [x] Severity levels (CRITICAL, HIGH, MEDIUM, LOW)
+  - [x] JSON response schema
+- [x] Implement `analyze_paragraph_pair()` function
+  - [x] Call LLM with structured prompt
+  - [x] Parse JSON response
+  - [x] Extract: is_inconsistent, type, severity, description, explanation, recommendation, excerpts, locations
 
 ### 3.6 API Endpoints
-- [ ] `POST /embeddings/ingest-document`
-  - [ ] Input: `{ project_id, document_id }`
-  - [ ] Fetch paragraphs from PostgreSQL
-  - [ ] Generate embeddings for each paragraph
-  - [ ] Upsert embeddings to Qdrant with metadata
-- [ ] `POST /consistency/analyze-pair`
-  - [ ] Input: `{ project_id, doc1_id, doc2_id }`
-  - [ ] Load paragraphs for both documents
-  - [ ] For each doc1 paragraph, find top_k similar doc2 paragraphs
-  - [ ] Call LLM for each candidate pair
-  - [ ] Return list of detected inconsistencies
+- [x] `POST /embeddings/ingest-document`
+  - [x] Input: `{ project_id, document_id }`
+  - [x] Fetch paragraphs from PostgreSQL
+  - [x] Generate embeddings for each paragraph
+  - [x] Upsert embeddings to Qdrant with metadata
+- [x] `POST /consistency/analyze-pair`
+  - [x] Input: `{ project_id, doc1_id, doc2_id }`
+  - [x] Load paragraphs for both documents
+  - [x] For each doc1 paragraph, find top_k similar doc2 paragraphs
+  - [x] Call LLM for each candidate pair
+  - [x] Return list of detected inconsistencies
 
 ### 3.7 RAG-Engine Dockerfile
-- [ ] Create `rag-engine/Dockerfile`
-- [ ] Configure Python container
-- [ ] Install dependencies
+- [x] Create `rag-engine/Dockerfile`
+- [x] Configure Python container
+- [x] Install dependencies
 
 ---
 
@@ -251,7 +251,7 @@
 
 ### 5.1 Environment Configuration
 - [x] Create `.env.example` for backend
-- [ ] Create `.env.example` for rag-engine
+- [x] Create `.env.example` for rag-engine
 - [ ] Create `.env.example` for frontend
 - [x] Document required environment variables:
   - [x] OpenAI API key
