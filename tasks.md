@@ -151,99 +151,92 @@
 ## Phase 4: Frontend (React + TypeScript + Material UI)
 
 ### 4.1 Foundation
-- [ ] Initialize React + TypeScript project (Vite)
-- [ ] Install Material UI (@mui/material, @emotion)
-- [ ] Setup project structure:
-  - [ ] `/src/components`
-  - [ ] `/src/pages`
-  - [ ] `/src/state`
-  - [ ] `/src/utils`
-  - [ ] `/src/theme`
-- [ ] Configure environment variables (VITE_API_URL)
+- [x] Initialize React + TypeScript project (Vite)
+- [x] Install Material UI (@mui/material, @emotion)
+- [x] Setup project structure:
+  - [x] `/src/components`
+  - [x] `/src/state`
+  - [x] `/src/utils`
+  - [x] `/src/theme`
+- [x] Configure environment variables (VITE_API_URL)
 
 ### 4.2 Monochrome Theme
-- [ ] Create custom MUI theme in `/src/theme`
-- [ ] Configure colors:
-  - [ ] Primary: shades of gray
-  - [ ] Secondary: shades of gray
-  - [ ] Background: white/light gray
-  - [ ] Text: black/dark gray
-- [ ] Define severity-based highlight styles:
-  - [ ] `.highlight-critical`: `rgba(0, 0, 0, 0.85)`, white text
-  - [ ] `.highlight-high`: `rgba(0, 0, 0, 0.65)`, white text
-  - [ ] `.highlight-medium`: `rgba(0, 0, 0, 0.45)`, white text
-  - [ ] `.highlight-low`: `rgba(0, 0, 0, 0.25)`, black text
+- [x] Create custom MUI theme in `/src/theme`
+- [x] Configure colors:
+  - [x] Primary: shades of gray
+  - [x] Secondary: shades of gray
+  - [x] Background: white/light gray
+  - [x] Text: black/dark gray
+- [x] Define severity-based highlight styles:
+  - [x] `.highlight-critical`: `rgba(0, 0, 0, 0.85)`, white text
+  - [x] `.highlight-high`: `rgba(0, 0, 0, 0.65)`, white text
+  - [x] `.highlight-medium`: `rgba(0, 0, 0, 0.45)`, white text
+  - [x] `.highlight-low`: `rgba(0, 0, 0, 0.25)`, black text
 
 ### 4.3 State Management
-- [ ] Setup Zustand/Redux Toolkit
-- [ ] Create stores:
-  - [ ] Projects store (list, selected project)
-  - [ ] Documents store (list, selected document)
-  - [ ] Inconsistencies store (list, selected inconsistency)
-- [ ] Implement API client functions
+- [x] Setup Zustand/Redux Toolkit
+- [x] Create stores:
+  - [x] Projects store (list, selected project)
+  - [x] Documents store (list, selected document)
+  - [x] Inconsistencies store (list, selected inconsistency)
+- [x] Implement API client functions
 
 ### 4.4 Layout Structure
-- [ ] Create main layout component (three-part)
-- [ ] Implement Left Sidebar (fixed width)
-- [ ] Implement Center Content Area (document viewer)
-- [ ] Implement Right Panel (inconsistency details)
+- [x] Create main layout component (three-part)
+- [x] Implement Left Sidebar (fixed width)
+- [x] Implement Center Content Area (document viewer)
+- [x] Implement Right Panel (inconsistency details)
 
 ### 4.5 Left Sidebar
-- [ ] **Top Section:**
-  - [ ] Project dropdown (MUI Select)
-  - [ ] "New Project" button
-  - [ ] New Project dialog/modal
-- [ ] **Middle Section:**
-  - [ ] Document list (clickable titles)
-  - [ ] Show document status
-- [ ] **Bottom Section:**
-  - [ ] Drag & Drop upload zone (MUI Box/Paper)
-  - [ ] "Drop .docx files here or click to upload" text
-  - [ ] Drag-over styling
-  - [ ] Click-to-select-file behavior
-  - [ ] File upload handler (multipart/form-data)
-  - [ ] Success/error toast notifications (MUI Snackbar)
+- [x] **Top Section:**
+  - [x] Project dropdown (MUI Select)
+  - [x] "New Project" button
+  - [x] New Project dialog/modal
+- [x] **Middle Section:**
+  - [x] Document list (clickable titles)
+  - [x] Show document status
+- [x] **Bottom Section:**
+  - [x] Drag & Drop upload zone (MUI Box/Paper)
+  - [x] "Drop .docx files here or click to upload" text
+  - [x] Drag-over styling
+  - [x] Click-to-select-file behavior
+  - [x] File upload handler (multipart/form-data)
+  - [x] Success/error toast notifications (MUI Snackbar)
 
 ### 4.6 Center: Document Viewer
-- [ ] Fetch document content on selection
-- [ ] Render paragraphs in order
-- [ ] Implement inline highlighting:
-  - [ ] Parse inconsistency locations (paragraph_index, start_offset, end_offset)
-  - [ ] Split paragraph text into segments
-  - [ ] Wrap highlighted segments in `<span>` with severity class
-- [ ] Implement scroll-to-paragraph functionality
-- [ ] Handle highlight click events
+- [x] Fetch document content on selection
+- [x] Render paragraphs in order
+- [x] Implement inline highlighting:
+  - [x] Parse inconsistency locations (paragraph_index, start_offset, end_offset)
+  - [x] Wrap highlighted segments with severity class
+- [x] Handle highlight click events
 
 ### 4.7 Right Panel: Inconsistency Details
-- [ ] Fetch inconsistencies for selected document
-- [ ] Display inconsistency list:
-  - [ ] Type badge
-  - [ ] Severity indicator (monochrome)
-  - [ ] Short description
-  - [ ] Source excerpt (truncated)
-- [ ] Implement inconsistency selection
-- [ ] Display full details on selection:
-  - [ ] Full explanation
-  - [ ] Recommendation
-  - [ ] Both excerpts (source & target)
-- [ ] Implement click-to-scroll-to-highlight
+- [x] Fetch inconsistencies for selected document
+- [x] Display inconsistency list:
+  - [x] Type badge
+  - [x] Severity indicator (monochrome)
+  - [x] Short description
+  - [x] Source excerpt (truncated)
+- [x] Implement inconsistency selection
+- [x] Display full details on selection:
+  - [x] Full explanation
+  - [x] Recommendation
 
 ### 4.8 Interactions & Synchronization
-- [ ] Sync highlight click → select inconsistency in right panel
-- [ ] Sync inconsistency click → scroll to highlight in viewer
-- [ ] Visual focus state for selected highlight
-- [ ] Update document list after upload
+- [x] Sync highlight click → select inconsistency in right panel
+- [x] Visual focus state for selected highlight
+- [x] Update document list after upload
 
 ### 4.9 Additional Features
-- [ ] "Run Consistency Check" button (triggers analysis)
-- [ ] Loading states (spinners/progress indicators)
-- [ ] Error handling and error boundaries
-- [ ] Empty states (no projects, no documents, no inconsistencies)
+- [x] "Run Consistency Check" button (triggers analysis)
+- [x] Loading states (spinners/progress indicators)
+- [x] Empty states (no projects, no documents, no inconsistencies)
 
 ### 4.10 Frontend Dockerfile
-- [ ] Create `frontend/Dockerfile`
-- [ ] Configure Node.js build container
-- [ ] Setup nginx for production serving
+- [x] Create `frontend/Dockerfile`
+- [x] Configure Node.js build container
+- [x] Setup nginx for production serving
 
 ---
 
@@ -252,7 +245,7 @@
 ### 5.1 Environment Configuration
 - [x] Create `.env.example` for backend
 - [x] Create `.env.example` for rag-engine
-- [ ] Create `.env.example` for frontend
+- [x] Create `.env.example` for frontend
 - [x] Document required environment variables:
   - [x] OpenAI API key
   - [x] PostgreSQL credentials
