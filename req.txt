@@ -1,0 +1,569 @@
+Project Name: Document Consistency Checker (DocuProof-Style)
+
+You are Vibe.
+You are building a complete new full-stack project from scratch using Docker-Compose, a ReactJS frontend with Material UI, a TypeScript/Node.js backend, a Python RAG engine, PostgreSQL, and Qdrant as a vector database.
+
+The entire solution must be containerized and orchestrated via docker-compose.
+
+The frontend UI must use a black & white theme (monochrome: black, white, and shades of gray only).
+
+The system must perform semantic consistency checks between multiple uploaded Word (.docx) documents using:
+- Embeddings (OpenAI) + Qdrant for semantic retrieval
+- A Large Language Model (LLM) for the actual decision (no hand-written rule engine)
+
+==================================================
+1. HIGH-LEVEL GOAL
+==================================================
+
+Build a web-based platform that allows users to:
+
+- Create or select a "project"
+- Upload multiple Word documents (.docx) into a project
+- Run a semantic "consistency check" across all documents in the project
+
+The system must:
+
+- Parse each .docx into paragraphs and store them in PostgreSQL
+- Generate embeddings for each paragraph using OpenAI embeddings
+- Store the embeddings in Qdrant with appropriate metadata
+- For each pair of documents, find semantically similar paragraph pairs using Qdrant
+- For each candidate paragraph pair, call an LLM which decides:
+  - whether an inconsistency exists
+  - what type of inconsistency it is
+  - how severe it is
+  - why it is inconsistent
+  - how it can be resolved
+- Store all detected inconsistencies in PostgreSQL
+- Visualize inconsistencies inline in the document viewer, with explanations in a sidebar
+
+There must be NO dedicated rule engine in code:
+- All semantic decisions (consistent / inconsistent, type, severity, explanation, recommendation) are performed by the LLM.
+- Embeddings + Qdrant are used only to find candidate paragraph pairs.
+
+==================================================
+2. INFRASTRUCTURE & DOCKER-COMPOSE
+==================================================
+
+Use docker-compose to orchestrate all services.
+
+Services (at minimum):
+
+- frontend: React + TypeScript + Material UI
+- backend: Node.js + TypeScript REST API
+- rag-engine: Python + FastAPI (embeddings + semantic analysis)
+- db: PostgreSQL
+- qdrant: Qdrant vector database
+
+docker-compose.yml requirements:
+
+- Define a shared Docker network (e.g. "app-network") for all services.
+- PostgreSQL, backend, rag-engine, and qdrant must be on the same network.
+- Qdrant must be reachable as http://qdrant:6333 from the rag-engine.
+- Backend must be reachable from frontend via an environment variable (e.g. VITE_API_URL).
+- Use volumes for:
+  - PostgreSQL data
+  - Qdrant storage
+
+Example Qdrant service (conceptual, Vibe must generate real YAML):
+
+qdrant:
+  image: qdrant/qdrant
+  container_name: qdrant
+  restart: unless-stopped
+  ports:
+    - "6333:6333"
+  volumes:
+    - qdrant_data:/qdrant/storage
+  networks:
+    - app-network
+
+At the bottom of docker-compose.yml:
+
+volumes:
+  qdrant_data:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
+
+==================================================
+3. PROJECT STRUCTURE
+==================================================
+
+Use a monorepo-style file structure:
+
+/backend
+  /src
+    /routes
+    /services
+    /models
+    /queue (optional, if you implement background jobs)
+    /workers (optional)
+    /utils
+
+/rag-engine
+  /src
+    /routes
+    /embeddings
+    /analysis
+    /clients (e.g., database + Qdrant clients)
+
+/frontend
+  /src
+    /components
+    /pages
+    /state
+    /utils
+    /theme
+
+==================================================
+4. DOMAIN MODEL & DATABASE SCHEMA (POSTGRES)
+==================================================
+
+The primary relational data must be stored in PostgreSQL.
+
+4.1 Projects
+
+Table: projects
+- id (uuid, primary key)
+- name (string)
+- created_at (timestamp)
+- updated_at (timestamp)
+
+4.2 Documents
+
+Table: documents
+- id (uuid, primary key)
+- project_id (uuid, foreign key to projects.id)
+- title (string)
+- original_filename (string)
+- status (string: "uploaded" | "ready" | "error")
+- created_at (timestamp)
+- updated_at (timestamp)
+
+4.3 Document paragraphs
+
+Table: document_paragraphs
+- id (uuid, primary key)
+- document_id (uuid, foreign key to documents.id)
+- index (int)                  // 0-based paragraph index
+- paragraph_id (string)        // e.g. "p-0", "p-1", ...
+- text (text)                  // plain text
+- html (text)                  // optional HTML representation
+
+4.4 Inconsistencies
+
+Inconsistency types (string enum, LLM decides which to use):
+- CONTRADICTION
+- MISSING_REQUIREMENT
+- CONFLICTING_DEFINITION
+- INCONSISTENT_SCOPE
+- DATA_MISMATCH
+
+Severity levels:
+- CRITICAL
+- HIGH
+- MEDIUM
+- LOW
+
+Table: document_inconsistencies
+- id (uuid, primary key)
+- project_id (uuid, foreign key to projects.id)
+- source_document_id (uuid)
+- target_document_id (uuid)
+- inconsistency_type (string)
+- severity (string)
+- description (text)
+- explanation (text)
+- recommendation (text)
+- source_excerpt (text)
+- target_excerpt (text)
+
+- source_paragraph_index (int)
+- source_start_offset (int)
+- source_end_offset (int)
+
+- target_paragraph_index (int)
+- target_start_offset (int)
+- target_end_offset (int)
+
+- created_at (timestamp)
+
+==================================================
+5. VECTOR STORE (QDRANT)
+==================================================
+
+Use **Qdrant** as the dedicated vector database for paragraph embeddings.
+
+Requirements:
+
+- Qdrant runs as a separate service in docker-compose.
+- The rag-engine connects to Qdrant using the official Python client (qdrant-client).
+- Create a collection, e.g. "paragraph_embeddings", with:
+  - vector size = embedding dimension (e.g. 1536 for OpenAI text-embedding-3-small)
+  - distance = COSINE (or similar appropriate metric)
+
+Each entry (point) in Qdrant must contain:
+
+- id: unique ID (e.g., UUID for the paragraph)
+- vector: list[float] (embedding)
+- payload: JSON metadata, at least:
+
+  {
+    "project_id": "project-uuid",
+    "document_id": "document-uuid",
+    "paragraph_id": "p-0",
+    "paragraph_index": 0
+  }
+
+The rag-engine must provide helper functions such as:
+
+- upsert_paragraph_embedding(project_id, document_id, paragraph_id, paragraph_index, embedding)
+- query_similar_paragraphs(project_id, document_id, query_embedding, target_document_id, top_k)
+
+==================================================
+6. EMBEDDING ARCHITECTURE (OPENAI)
+==================================================
+
+Embedding generation is handled exclusively by the rag-engine (Python).
+
+Initial provider: **OpenAI Embeddings**  
+Example model: "text-embedding-3-small"
+
+Define a single abstraction function:
+
+def generate_embedding(text: str) -> list[float]:
+    """
+    Generate a single embedding vector for the given text.
+    Initially implemented using OpenAI's embedding API.
+    Later this function can be changed to use a local model
+    without affecting the rest of the codebase.
+    """
+
+All other parts of the rag-engine must call only this function and must not depend on the OpenAI API directly.
+
+==================================================
+7. INGESTION FLOW ON DOCUMENT UPLOAD
+==================================================
+
+When a user uploads a .docx file to a project, the following flow must happen:
+
+1. Frontend:
+   - User selects a project in the sidebar (dropdown).
+   - User drags & drops one or more .docx files into the upload area at the bottom of the left sidebar.
+   - Frontend sends the file(s) to the backend via a multipart/form-data POST request.
+
+2. Backend:
+   - Endpoint: POST /projects/:projectId/documents
+   - Validates file type (.docx).
+   - Stores a new document record with status "uploaded".
+   - Parses the .docx into paragraphs using a library (e.g. Mammoth, or via a Python helper service if needed).
+   - Creates:
+     - document_paragraphs entries for each paragraph with paragraph_id like "p-0", "p-1", ...
+   - Sets document status to "ready".
+
+3. Backend → Rag-engine:
+   - After successfully storing the document and its paragraphs, the backend calls a rag-engine endpoint:
+
+     POST /embeddings/ingest-document
+     {
+       "project_id": "project-uuid",
+       "document_id": "document-uuid"
+     }
+
+4. Rag-engine:
+   - Fetches all paragraphs for the given document_id from PostgreSQL.
+   - For each paragraph:
+     - Calls generate_embedding(text) to get an embedding.
+     - Upserts the embedding into Qdrant, including payload:
+       {
+         "project_id": ...,
+         "document_id": ...,
+         "paragraph_id": "p-N",
+         "paragraph_index": N
+       }
+
+After ingestion:
+- All paragraphs of the document have embeddings stored in Qdrant.
+- The document is ready for fast semantic similarity queries.
+
+==================================================
+8. CONSISTENCY ANALYSIS WORKFLOW
+==================================================
+
+When the user triggers a consistency check for a project, the backend orchestrates the analysis.
+
+8.1 Trigger
+
+- Endpoint: POST /projects/:projectId/consistency/run
+- Backend:
+  - Fetches all documents with status "ready" in the project.
+  - If number of documents < 2 → return:
+    - success = true
+    - message = "Not enough documents to perform consistency check"
+  - Otherwise:
+    - Compute all unordered document pairs: (n * (n - 1)) / 2
+    - For each pair (doc1, doc2), call the rag-engine endpoint:
+
+      POST /consistency/analyze-pair
+      {
+        "project_id": "project-uuid",
+        "doc1_id": "doc1-uuid",
+        "doc2_id": "doc2-uuid"
+      }
+
+8.2 Rag-engine: analyze-pair
+
+For a given document pair (doc1, doc2):
+
+- Load paragraphs for doc1 and doc2 from PostgreSQL.
+- For each paragraph of doc1:
+  - Retrieve or compute its embedding (prefer Qdrant/DB; do not regenerate unnecessarily).
+  - Use Qdrant to find top_k (e.g. 3–5) most similar paragraphs from doc2, filtering by:
+    - project_id
+    - document_id = doc2_id
+- For each candidate pair (paragraphA from doc1, paragraphB from doc2):
+  - Call the LLM with a carefully designed prompt and these inputs:
+    - paragraphA text
+    - paragraphB text
+    - optional context (document titles, project type)
+    - description of available inconsistency types and severity levels
+    - desired JSON response schema
+  - The LLM decides:
+    - is_inconsistent: boolean
+    - if true:
+      - inconsistency_type
+      - severity
+      - description
+      - explanation
+      - recommendation
+      - source_excerpt / target_excerpt
+      - source_location (paragraph_id, start_offset, end_offset)
+      - target_location (paragraph_id, start_offset, end_offset)
+
+- The rag-engine must collect all inconsistencies with is_inconsistent = true and return them to the backend in a structured list.
+
+8.3 No rule engine
+
+- There must be NO dedicated rule engine in backend or rag-engine.
+- No if/else logic that defines inconsistency types in code.
+- All semantic judgments (whether something is a contradiction, scope mismatch, etc.) must be delegated to the LLM via prompt instructions.
+
+8.4 Backend: storing inconsistencies
+
+- For each inconsistency returned by the rag-engine:
+  - Map paragraph_id to paragraph_index using document_paragraphs.
+  - Insert a record into document_inconsistencies with:
+    - project_id, source_document_id, target_document_id
+    - inconsistency_type, severity
+    - description, explanation, recommendation
+    - source_excerpt, target_excerpt
+    - source_paragraph_index, source_start_offset, source_end_offset
+    - target_paragraph_index, target_start_offset, target_end_offset
+
+==================================================
+9. BACKEND API (NODE + TYPESCRIPT)
+==================================================
+
+Implement a REST API with at least the following endpoints:
+
+- Projects:
+  - GET /projects
+  - POST /projects        // create new project
+
+- Documents:
+  - GET /projects/:projectId/documents
+  - POST /projects/:projectId/documents   // upload .docx (multipart/form-data)
+  - GET /documents/:documentId/content    // paragraphs with HTML/text
+
+- Consistency Analysis:
+  - POST /projects/:projectId/consistency/run
+  - GET /projects/:projectId/inconsistencies
+    - Optional query param: documentId
+      - return only inconsistencies where source_document_id or target_document_id = documentId
+
+The backend must be implemented in TypeScript, using Express or Fastify, and must include:
+- request validation
+- error handling
+- logging
+
+==================================================
+10. RAG-ENGINE API (PYTHON + FASTAPI)
+==================================================
+
+The rag-engine must provide at least:
+
+- POST /embeddings/ingest-document
+  - Input: { project_id, document_id }
+  - Behavior: fetch paragraphs from PostgreSQL, generate embeddings (OpenAI), upsert into Qdrant.
+
+- POST /consistency/analyze-pair
+  - Input: { project_id, doc1_id, doc2_id }
+  - Behavior: as described in Section 8.2
+  - Output: list of inconsistency objects with:
+    - source_document_id, target_document_id
+    - source_paragraph_id, target_paragraph_id
+    - source_excerpt, target_excerpt
+    - source_location, target_location
+    - inconsistency_type, severity, description, explanation, recommendation
+
+The rag-engine must encapsulate:
+- Postgres access (read-only for paragraphs)
+- Qdrant access
+- Embedding generation (OpenAI)
+- LLM calls (for deciding inconsistencies)
+
+==================================================
+11. FRONTEND APPLICATION (REACT + MATERIAL UI)
+==================================================
+
+11.1 Technology
+
+- React + TypeScript
+- Material UI (MUI)
+- Custom MUI theme with monochrome design:
+  - primary/secondary colors must be shades of gray
+  - background: white or light gray
+  - text: black or dark gray
+  - no colored accents (no blue, red, green, etc.)
+
+11.2 Global Layout
+
+Use a three-part layout:
+
+- Left sidebar (fixed width)
+- Center main content (document viewer)
+- Right panel (inconsistency details)
+
+11.3 Left Sidebar (very important)
+
+The left sidebar must contain:
+
+1. Top section:
+   - Project dropdown (MUI Select) to choose the active project.
+   - "New Project" button to create a project (MUI Button / Dialog).
+
+2. Middle section (optional):
+   - List of documents in the selected project (titles).
+
+3. Bottom section:
+   - Drag & Drop upload zone for .docx files.
+   - Use Material UI components (Box, Paper, etc.)
+   - Show text: e.g. "Drop .docx files here or click to upload".
+   - Implement drag-over styling and click-to-select-file behavior.
+
+The sidebar must be visually separated (e.g., using MUI Divider or border) from the main content area.
+
+11.4 Center: Document Viewer
+
+- Fetch document content via GET /documents/:documentId/content.
+- Render paragraphs in order.
+- For each paragraph, apply inline highlighting based on inconsistencies:
+
+  - The frontend knows:
+    - source_paragraph_index, source_start_offset, source_end_offset
+    - target_paragraph_index, target_start_offset, target_end_offset
+
+- For the currently selected document:
+  - Build segments within each paragraph text:
+    - normal text
+    - highlighted text segments for inconsistent ranges
+  - Wrap highlighted segments in `<span>` with a severity-based class.
+
+Monochrome highlight example:
+
+.highlight-critical { background-color: rgba(0, 0, 0, 0.85); color: #ffffff; }
+.highlight-high     { background-color: rgba(0, 0, 0, 0.65); color: #ffffff; }
+.highlight-medium   { background-color: rgba(0, 0, 0, 0.45); color: #ffffff; }
+.highlight-low      { background-color: rgba(0, 0, 0, 0.25); color: #000000; }
+
+No colored highlights, only black/white/gray.
+
+11.5 Right Panel: Inconsistency Details
+
+- Display a list of inconsistencies related to the currently selected document.
+- Each list item should show:
+  - type (e.g. CONTRADICTION)
+  - severity
+  - short description
+  - source_excerpt (with ellipsis if long)
+
+- When a user selects an inconsistency (click):
+  - Scroll the center document viewer to the corresponding paragraph & highlight
+  - Mark the selected highlight visually (e.g., border or different opacity)
+  - Show full details:
+    - explanation
+    - recommendation
+    - possibly both excerpts
+
+11.6 Interactions
+
+- Clicking a highlight in the document:
+  - Selects the corresponding inconsistency in the right panel
+  - Keeps the panels in sync
+
+- Clicking an inconsistency in the right panel:
+  - Scrolls to the corresponding paragraph in the document viewer
+  - Applies a focus style to the matching highlight
+
+- After uploading a document:
+  - Refresh the document list in the sidebar
+  - Optionally show a toast/snackbar (MUI Snackbar) for success/error
+
+==================================================
+12. TECHNOLOGY & QUALITY REQUIREMENTS
+==================================================
+
+Backend:
+- Node.js + TypeScript
+- Express or Fastify
+- PostgreSQL
+- Type-safe DB access (e.g., Prisma, TypeORM, or similar)
+- Proper error handling and logging
+
+Rag-engine:
+- Python + FastAPI
+- qdrant-client for Qdrant integration
+- OpenAI Python client for embedding + LLM calls
+- Clean separation of:
+  - database client
+  - Qdrant client
+  - embedding service
+  - LLM service
+  - analysis orchestration
+
+Frontend:
+- React + TypeScript
+- Material UI
+- Functional components & hooks
+- Central state management (e.g., Zustand or Redux Toolkit)
+
+General:
+- Clean, production-grade structure
+- Real, compilable code
+- No pseudo-code
+- Environment variables for secrets (OpenAI keys, DB credentials, etc.)
+- The system must be runnable via:
+  - docker-compose up
+  - with minimal manual configuration
+
+==================================================
+13. SUMMARY
+==================================================
+
+You must build a containerized, full-stack document consistency checker that:
+
+- Ingests Word (.docx) documents
+- Splits them into paragraphs and stores them in PostgreSQL
+- Generates paragraph embeddings with OpenAI and stores them in Qdrant
+- Uses Qdrant to find semantically similar paragraphs between documents
+- Uses an LLM (prompted with a clear JSON schema) to decide whether paragraph pairs are inconsistent, and if so:
+  - type, severity, explanation, recommendation, excerpts, and locations
+- Stores all inconsistencies in PostgreSQL
+- Renders documents with inline monochrome highlights in a React + Material UI frontend
+- Provides a left sidebar with project selection and drag & drop upload area
+- Provides a right sidebar with detailed explanations of each inconsistency
+
+There must be NO hand-crafted rule engine for classification logic; all semantic judgments are made by the LLM, with embeddings + Qdrant used solely for retrieval of candidate paragraph pairs.
+
